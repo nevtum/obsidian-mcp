@@ -1,3 +1,9 @@
+from obsidian_api.exceptions import NoteMissingException
+
+
+from obsidian_api.note import Note
+
+
 class ObsidianVault:
     def __init__(self, directory):
         self.directory = directory
@@ -16,6 +22,17 @@ class ObsidianVault:
                 "distance": 2,
             },
         ]
+
+    def __init__(self, directory):
+        self.notes = {
+            "note1.md": Note(filename="note1.md", content="Content of note 1."),
+            "note2.md": Note(filename="note2.md", content="Content of note 2."),
+        }
+
+    def fetch_note_by_slug(self, slug):
+        if slug not in self.notes:
+            raise NoteMissingException(f"No note found with slug: {slug}")
+        return self.notes[slug]
 
     def watch_changes(self):
         """A mock implementation that simulates change detection."""
