@@ -31,16 +31,17 @@ class ObsidianVault:
         return self.notes[slug]
 
     def load_notes(self):
-        for filename in os.listdir(self.directory):
-            if filename.endswith(".md"):
-                with open(os.path.join(self.directory, filename), "r") as file:
-                    content = file.read()
-                # WARNING: below code seems error prone. Consider using Pathlib instead
-                # for more robust handling of extensions
-                slug = filename[:-3]  # Remove the '.md' extension for slug
-                self.notes[slug] = Note(filename=filename, content=content)
+        for root, _, files in os.walk(self.directory):
+            for filename in files:
+                if filename.endswith(".md"):
+                    self._load_note_file(os.path.join(root, filename))
 
-    # This part should be removed from here since it belongs in fetch_note_by_slug
+    def _load_note_file(self, filepath):
+        with open(filepath, "r") as file:
+            content = file.read()
+        slug = os.path.basename(filepath)[:-3]  # Remove the '.md' extension for slug
+        print(f"Loaded note: {slug} from {filepath}")
+        self.notes[slug] = Note(filename=filepath, content=content)
 
     def watch_changes(self):
         """A mock implementation that simulates change detection."""

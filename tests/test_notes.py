@@ -71,19 +71,33 @@ title: Note 1
 tags: [sample, test]
 ---
 
-This is a sample note for testing purposes.""")
+This is a sample note for testing purposes.
+""")
+
     note2_content = dedent("""---
 title: Note 2
 tags: [sample, test]
 ---
 
-This is another sample note for testing purposes.""")
+This is another sample note for testing purposes.
+""")
+
+    note3_content = dedent("""---
+title: Note 3
+tags: [sample, test]
+---
+
+This is a third sample note for testing purposes.
+""")
 
     note1 = vault.fetch_note_by_slug("note1")
     assert note1.content == note1_content
 
     note2 = vault.fetch_note_by_slug("note2")
     assert note2.content == note2_content
+
+    note3 = vault.fetch_note_by_slug("note3")
+    assert note3.content == note3_content
 
 
 def test_change_detection(vault):
