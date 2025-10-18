@@ -1,7 +1,10 @@
+from textwrap import dedent
+
 import pytest
+
+from obsidian_api.exceptions import NoteMissingException
 from obsidian_api.note import Note
 from obsidian_api.vault import ObsidianVault
-from obsidian_api.exceptions import NoteMissingException  # Import the exception
 
 
 @pytest.fixture
@@ -63,20 +66,18 @@ def test_fetch_note_by_slug(vault):
 
 
 def test_fetch_note_contents(vault):
-    note1_content = """---
-    title: Note 1
-    tags: [sample, test]
-    ---
+    note1_content = dedent("""---
+title: Note 1
+tags: [sample, test]
+---
 
-    This is a sample note for testing purposes.
-    """
-    note2_content = """---
-    title: Note 2
-    tags: [sample, test]
-    ---
+This is a sample note for testing purposes.""")
+    note2_content = dedent("""---
+title: Note 2
+tags: [sample, test]
+---
 
-    This is another sample note for testing purposes.
-    """
+This is another sample note for testing purposes.""")
 
     note1 = vault.fetch_note_by_slug("note1")
     assert note1.content == note1_content

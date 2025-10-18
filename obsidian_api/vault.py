@@ -1,7 +1,6 @@
 import os
+
 from obsidian_api.exceptions import NoteMissingException
-
-
 from obsidian_api.note import Note
 
 
@@ -36,8 +35,10 @@ class ObsidianVault:
             if filename.endswith(".md"):
                 with open(os.path.join(self.directory, filename), "r") as file:
                     content = file.read()
-                # TODO: store the globally unique slug, not the filename
-                self.notes[filename] = Note(filename=filename, content=content)
+                # WARNING: below code seems error prone. Consider using Pathlib instead
+                # for more robust handling of extensions
+                slug = filename[:-3]  # Remove the '.md' extension for slug
+                self.notes[slug] = Note(filename=filename, content=content)
 
     # This part should be removed from here since it belongs in fetch_note_by_slug
 
