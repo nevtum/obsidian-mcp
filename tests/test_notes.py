@@ -1,5 +1,6 @@
 import pytest
-from obsidian_api import Note, ObsidianVault
+from obsidian_api.note import Note
+from obsidian_api.vault import ObsidianVault
 
 
 @pytest.fixture
