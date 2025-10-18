@@ -18,7 +18,7 @@ def sample_note():
 
 @pytest.fixture
 def vault():
-    return ObsidianVault(directory="test_data")
+    return ObsidianVault(directory="tests/test_data")
 
 
 def test_note_initialization(sample_note):
@@ -58,35 +58,30 @@ def test_find_relevant_notes(vault):
 def test_fetch_note_by_slug(vault):
     with pytest.raises(NoteMissingException):  # Ensure NoteMissingException is raised
         vault.fetch_note_by_slug(
-            "non_existent_slug.md"
+            "non_existent_slug"
         )  # Attempt to fetch a non-existent note
 
 
 def test_fetch_note_contents(vault):
     note1_content = """---
     title: Note 1
-    tags: [example]
+    tags: [sample, test]
     ---
 
-    This is the content of note 1.
+    This is a sample note for testing purposes.
     """
     note2_content = """---
     title: Note 2
-    tags: [example]
+    tags: [sample, test]
     ---
 
-    This is the content of note 2.
+    This is another sample note for testing purposes.
     """
 
-    # Assuming the directory has the markdown files for these notes
-    vault.fetch_note_by_slug = lambda slug: Note(
-        filename=slug, content=note1_content if slug == "note1.md" else note2_content
-    )
-
-    note1 = vault.fetch_note_by_slug("note1.md")
+    note1 = vault.fetch_note_by_slug("note1")
     assert note1.content == note1_content
 
-    note2 = vault.fetch_note_by_slug("note2.md")
+    note2 = vault.fetch_note_by_slug("note2")
     assert note2.content == note2_content
 
 
