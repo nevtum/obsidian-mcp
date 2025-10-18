@@ -65,39 +65,48 @@ def test_fetch_note_by_slug(vault):
         )  # Attempt to fetch a non-existent note
 
 
-def test_fetch_note_contents(vault):
-    note1_content = dedent("""---
+@pytest.mark.parametrize(
+    "slug, expected_content, expected_frontmatter",
+    [
+        (
+            "note1",
+            dedent("""---
 title: Note 1
 tags: [sample, test]
 ---
 
 This is a sample note for testing purposes.
-""")
-
-    note2_content = dedent("""---
+     """),
+            {"title": "Note 1", "tags": ["sample", "test"]},
+        ),
+        (
+            "note2",
+            dedent("""---
 title: Note 2
 tags: [sample, test]
 ---
 
 This is another sample note for testing purposes.
-""")
-
-    note3_content = dedent("""---
+     """),
+            {"title": "Note 2", "tags": ["sample", "test"]},
+        ),
+        (
+            "note3",
+            dedent("""---
 title: Note 3
 tags: [sample, test]
 ---
 
 This is a third sample note for testing purposes.
-""")
-
-    note1 = vault.fetch_note_by_slug("note1")
-    assert note1.content == note1_content
-
-    note2 = vault.fetch_note_by_slug("note2")
-    assert note2.content == note2_content
-
-    note3 = vault.fetch_note_by_slug("note3")
-    assert note3.content == note3_content
+     """),
+            {"title": "Note 3", "tags": ["sample", "test"]},
+        ),
+    ],
+)
+def test_fetch_note_contents(vault, slug, expected_content, expected_frontmatter):
+    note = vault.fetch_note_by_slug(slug)
+    assert note.content == expected_content
+    assert note.frontmatter == expected_frontmatter
 
 
 def test_change_detection(vault):
