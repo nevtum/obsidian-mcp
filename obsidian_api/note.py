@@ -1,5 +1,6 @@
 class Note:
-    def __init__(self, filename, content):
+    def __init__(self, slug, filename, content):
+        self.slug = slug
         self.filename = filename.split("/")[-1]  # Strip path, keep only filename
         self.content = content
         self.frontmatter = self._parse_frontmatter(content)
@@ -37,3 +38,10 @@ class Note:
         import re
 
         return re.findall(r"\[\[(.*?)\]\]", self.content)
+
+    def as_json(self):
+        return {
+            "slug": self.slug,
+            "content": self.content,
+            "frontmatter": self.frontmatter,
+        }

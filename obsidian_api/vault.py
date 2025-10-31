@@ -41,7 +41,7 @@ class ObsidianVault:
             content = file.read()
         slug = os.path.basename(filepath)[:-3]  # Remove the '.md' extension for slug
         print(f"Loaded note: {slug} from {filepath}")
-        self.notes[slug] = Note(filename=filepath, content=content)
+        self.notes[slug] = Note(slug=slug, filename=filepath, content=content)
 
     def watch_changes(self):
         """A mock implementation that simulates change detection."""

@@ -16,7 +16,11 @@ def sample_note():
 
     This is a note about myself. You can find more in [[projects]] and [[hobbies]].
     """
-    return Note(filename="test_data/about_me.md", content=content)
+    return Note(
+        slug="about-me",
+        filename="test_data/about-me.md",
+        content=content,
+    )
 
 
 @pytest.fixture
@@ -25,7 +29,8 @@ def vault():
 
 
 def test_note_initialization(sample_note):
-    assert sample_note.filename == "about_me.md"
+    assert sample_note.slug == "about-me"
+    assert sample_note.filename == "about-me.md"
     assert (
         sample_note.content
         == """---
