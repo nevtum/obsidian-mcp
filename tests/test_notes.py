@@ -71,7 +71,7 @@ def test_fetch_note_by_slug(vault):
 
 
 @pytest.mark.parametrize(
-    "slug, expected_content, expected_frontmatter",
+    "slug, expected_content, expected_frontmatter, expected_links",
     [
         (
             "note1",
@@ -83,6 +83,7 @@ tags: [sample, test]
 This is a sample note for testing purposes.
      """),
             {"title": "Note 1", "tags": ["sample", "test"]},
+            [],
         ),
         (
             "note2",
@@ -92,8 +93,10 @@ tags: [sample, test]
 ---
 
 This is another sample note for testing purposes.
+Here's a link to [[note1]] and to [[note3]].
      """),
             {"title": "Note 2", "tags": ["sample", "test"]},
+            ["note1", "note3"],
         ),
         (
             "note3",
@@ -105,13 +108,17 @@ tags: [sample, test]
 This is a third sample note for testing purposes.
      """),
             {"title": "Note 3", "tags": ["sample", "test"]},
+            [],
         ),
     ],
 )
-def test_fetch_note_contents(vault, slug, expected_content, expected_frontmatter):
+def test_fetch_note_contents(
+    vault, slug, expected_content, expected_frontmatter, expected_links
+):
     note = vault.fetch_note_by_slug(slug)
     assert note.content == expected_content
     assert note.frontmatter == expected_frontmatter
+    assert note.extract_links() == expected_links
 
 
 def test_change_detection(vault):
