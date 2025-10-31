@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, PlainTextResponse
 from fastapi import Depends
 from obsidian_api.vault import ObsidianVault
 from obsidian_api.exceptions import NoteMissingException
@@ -20,7 +20,16 @@ async def index():
 async def read_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
     try:
         note = vault.fetch_note_by_slug(slug)
-        return note
+        return note.as_json()
+    except NoteMissingException:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+
+@app.get("/notes/{slug}/content")
+async def read_raw_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
+    try:
+        note = vault.fetch_note_by_slug(slug)
+        return PlainTextResponse(note.content)
     except NoteMissingException:
         raise HTTPException(status_code=404, detail="Note not found")
 
