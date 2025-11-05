@@ -42,6 +42,9 @@ class ObsidianVault:
 
         return relevant_notes
 
+    def find_backlinks(self, slug):
+        raise NotImplementedError("find_backlinks method is not implemented yet.")
+
     def fetch_note_by_slug(self, slug):
         if slug not in self.notes:
             raise NoteMissingException(f"No note found with slug: {slug}")
