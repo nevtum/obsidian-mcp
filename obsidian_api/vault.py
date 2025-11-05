@@ -1,5 +1,6 @@
 import os
 
+from collections import deque
 from obsidian_api.exceptions import NoteMissingException
 from obsidian_api.note import Note
 
@@ -11,19 +12,35 @@ class ObsidianVault:
         self.load_notes()  # Load notes from the directory
 
     def find_relevant_notes(self, start_slug, max_hops=2, char_limit=100):
-        """A mock implementation that simulates finding relevant notes."""
-        return [
-            {
-                "filename": "note1.md",
-                "contents_summary": "Summary of note1",
-                "distance": 1,
-            },
-            {
-                "filename": "note2.md",
-                "contents_summary": "Summary of note2",
-                "distance": 2,
-            },
-        ]
+        queue = deque([(start_slug, 0)])
+        visited = set()
+        relevant_notes = []
+
+        while queue:
+            current_slug, current_hop = queue.popleft()
+
+            if current_slug in visited:
+                continue
+
+            visited.add(current_slug)
+
+            if current_hop <= max_hops:
+                current_note = self.fetch_note_by_slug(current_slug)
+
+                if current_hop > 0:
+                    relevant_notes.append(
+                        {
+                            "filename": current_note.filename,
+                            "contents_summary": current_note.content[:char_limit],
+                            "distance": current_hop,
+                        }
+                    )
+
+                for link in current_note.extract_links():
+                    if link in self.notes:
+                        queue.append((link, current_hop + 1))
+
+        return relevant_notes
 
     def fetch_note_by_slug(self, slug):
         if slug not in self.notes:

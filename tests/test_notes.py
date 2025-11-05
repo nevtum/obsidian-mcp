@@ -55,7 +55,7 @@ def test_extract_links(sample_note):
 def test_find_relevant_notes(vault):
     # Assuming `find_relevant_notes` method is implemented in ObsidianVault
     relevant_notes = vault.find_relevant_notes(
-        start_slug="about_me.md", max_hops=2, char_limit=100
+        start_slug="note2", max_hops=2, char_limit=100
     )
     assert isinstance(relevant_notes, list)
     assert all("filename" in note for note in relevant_notes)
