@@ -11,8 +11,8 @@ class ObsidianVault:
         self.notes = {}
         self.load_notes()  # Load notes from the directory
 
-    def find_relevant_notes(self, start_slug, max_hops=2, char_limit=100):
-        queue = deque([(start_slug, 0)])
+    def find_relevant_notes(self, slug, max_hops=2, char_limit=100):
+        queue = deque([(slug, 0)])
         visited = set()
         relevant_notes = []
 
@@ -42,8 +42,8 @@ class ObsidianVault:
 
         return relevant_notes
 
-    def find_backlinks(self, slug):
-        raise NotImplementedError("find_backlinks method is not implemented yet.")
+    def find_ancestors(self, slug, max_hops=2, char_limit=100):
+        raise NotImplementedError("find_ancestors method is not implemented yet.")
 
     def fetch_note_by_slug(self, slug):
         if slug not in self.notes:

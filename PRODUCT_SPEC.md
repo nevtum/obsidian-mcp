@@ -23,6 +23,7 @@ The goal of this project is to develop a read-only API that interacts with a col
 #### Finding Links
 - Each `Note` instance must provide functionality to extract links in the format `[[link-name]]` from its content.
 - The extracted links must be returned as a unique list of slugs that represent other notes.
+- The API must implement a `find_ancestors(slug, max_hops)` method to find notes that can be linked back to the current note within a specified number of hops.
 
 #### Finding Relevant Notes
 - The API must implement a breadth-first search (BFS) algorithm to find relevant notes within a specified number of hops.
