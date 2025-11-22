@@ -1,6 +1,6 @@
 import os
-
 from collections import deque
+
 from obsidian_api.exceptions import NoteMissingException
 from obsidian_api.note import Note
 
@@ -10,6 +10,9 @@ class ObsidianVault:
         self.directory = directory
         self.notes = {}
         self.load_notes()  # Load notes from the directory
+
+    def list_note_slugs(self):
+        return list(self.notes.keys())
 
     def find_relevant_notes(self, slug, max_hops=2, char_limit=100):
         queue = deque([(slug, 0)])
