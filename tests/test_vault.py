@@ -1,7 +1,8 @@
 import pytest
-from obsidian_api.vault import ObsidianVault
+
 from obsidian_api.exceptions import NoteMissingException
 from obsidian_api.note import Note
+from obsidian_api.vault import ObsidianVault
 
 
 @pytest.fixture
@@ -27,6 +28,9 @@ def vault():
         "note4": Note("note4", "note4.md", "This is the fourth note. No links."),
     }
     return vault
+
+
+# TODO: test for duplicate slug detected
 
 
 def test_find_relevant_notes_within_hops(vault):

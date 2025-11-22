@@ -32,7 +32,12 @@ async def read_raw_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
 async def find_links(slug: str, vault: ObsidianVault = Depends(get_vault)):
     note = vault.fetch_note_by_slug(slug)
     links = note.extract_links()  # Assumes Note class has this method
-    return {"links": links}
+    return {
+        "params": {
+            "slug": slug,
+        },
+        "links": links,
+    }
 
 
 @router.get("/notes/{slug}/relevant")
@@ -57,7 +62,12 @@ async def find_relevant_notes(
 async def read_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
     try:
         note = vault.fetch_note_by_slug(slug)
-        return {"results": note.as_json()}
+        return {
+            "params": {
+                "slug": slug,
+            },
+            "results": note.as_json(),
+        }
     except NoteMissingException:
         raise HTTPException(status_code=404, detail="Note not found")
 
