@@ -9,6 +9,7 @@ dependencies = [
     "httpx>=0.28.1",
     "isort>=7.0.0",
     "pytest>=8.4.2",
+    "python-dotenv>=1.2.1",
     "python-frontmatter>=1.1.0",
     "uvicorn>=0.38.0",
 ]

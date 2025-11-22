@@ -1,7 +1,7 @@
 import os
 from collections import deque
 
-from obsidian_api.exceptions import DuplicateSlugDetected, NoteMissingException
+from obsidian_api.exceptions import NoteMissingException
 from obsidian_api.note import Note
 
 
