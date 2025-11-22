@@ -1,7 +1,7 @@
 import os
 from collections import deque
 
-from obsidian_api.exceptions import NoteMissingException
+from obsidian_api.exceptions import DuplicateSlugDetected, NoteMissingException
 from obsidian_api.note import Note
 
 
@@ -64,6 +64,9 @@ class ObsidianVault:
             content = file.read()
         slug = os.path.basename(filepath)[:-3]  # Remove the '.md' extension for slug
         print(f"Loaded note: {slug} from {filepath}")
+        if slug in self.notes:
+            # TODO: unit test this logic
+            raise DuplicateSlugDetected(slug)
         self.notes[slug] = Note(slug=slug, filename=filepath, content=content)
 
     def watch_changes(self):
