@@ -1,5 +1,3 @@
-from textwrap import dedent
-
 import pytest
 
 from obsidian_api.exceptions import NoteMissingException
@@ -20,35 +18,20 @@ tags:
 ---
 """
 
-NOTE = f"""
-{FRONTMATTER1}
-
-This is a note about myself. You can find more in [[projects]] and [[hobbies]].
-"""
-
 
 @pytest.fixture
 def sample_note():
+    text = "This is a note about myself. You can find more in [[projects]] and [[hobbies]]."
     return Note(
         slug="about-me",
         filename="test_data/about-me.md",
-        content=NOTE,
+        content=f"{FRONTMATTER1}\n{text}",
     )
 
 
 @pytest.fixture
 def vault():
     return ObsidianVault(directory="tests/test_data")
-
-
-def test_note_initialization(sample_note):
-    assert sample_note.slug == "about-me"
-    assert sample_note.filename == "about-me.md"
-    assert sample_note.content == NOTE
-    assert sample_note.frontmatter == {
-        "title": "About Me",
-        "tags": ["personal", "introduction"],
-    }
 
 
 @pytest.mark.parametrize(
@@ -58,23 +41,22 @@ def test_note_initialization(sample_note):
         ("index", "vault/index.md", FRONTMATTER2),
     ],
 )
-def test_note_initialization2(slug, filename, frontmatter):
-    content = f"""
-{frontmatter}
-
-This is a note about myself. You can find more in [[projects]] and [[hobbies]].
-    """
+def test_note_initialization(slug, filename, frontmatter):
+    text = "This is a note about myself. You can find more in [[projects]] and [[hobbies]]."
+    content = f"{frontmatter}\n{text}"
     note = Note(
         slug=slug,
         filename=filename,
         content=content,
     )
-    assert note.content == content
+    assert note.content == text
+    assert note.raw_content == content
     assert note.frontmatter == {
         "title": "About Me",
         "tags": ["personal", "introduction"],
     }
     assert note.slug == slug
+    assert note.filepath == filename
     assert note.filename == filename.split("/")[-1]
 
 
@@ -84,7 +66,6 @@ def test_extract_links(sample_note):
 
 
 def test_find_relevant_notes(vault):
-    # Assuming `find_relevant_notes` method is implemented in ObsidianVault
     relevant_notes = vault.find_relevant_notes(slug="note2", max_hops=2, char_limit=100)
     assert isinstance(relevant_notes, list)
     assert all("filename" in note for note in relevant_notes)
@@ -104,38 +85,19 @@ def test_fetch_note_by_slug(vault):
     [
         (
             "note1",
-            dedent("""---
-title: Note 1
-tags: [sample, test]
----
-
-This is a sample note for testing purposes.
-     """),
+            "This is a sample note for testing purposes.",
             {"title": "Note 1", "tags": ["sample", "test"]},
             [],
         ),
         (
             "note2",
-            dedent("""---
-title: Note 2
-tags: [sample, test]
----
-
-This is another sample note for testing purposes.
-Here's a link to [[note1]] and to [[note3]].
-     """),
+            "This is another sample note for testing purposes.\nHere's a link to [[note1]] and to [[note3]].",
             {"title": "Note 2", "tags": ["sample", "test"]},
             ["note1", "note3"],
         ),
         (
             "note3",
-            dedent("""---
-title: Note 3
-tags: [sample, test]
----
-
-This is a third sample note for testing purposes.
-     """),
+            "This is a third sample note for testing purposes.",
             {"title": "Note 3", "tags": ["sample", "test"]},
             [],
         ),

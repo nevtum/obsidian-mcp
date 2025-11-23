@@ -63,9 +63,6 @@ async def read_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
     try:
         note = vault.fetch_note_by_slug(slug)
         return {
-            "params": {
-                "slug": slug,
-            },
             "results": note.as_json(),
         }
     except NoteMissingException:

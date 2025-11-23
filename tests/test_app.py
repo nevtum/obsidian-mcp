@@ -5,16 +5,17 @@ from obsidian_api.api import app
 
 client = TestClient(app)
 
+# TODO: test other endpoints
+
 
 def test_get_note_success():
     response = client.get("/notes/index")
     assert response.status_code == 200
     assert response.json() == {
-        "params": {"slug": "index"},
         "results": {
             "slug": "index",
-            "content": "This is an index file\n",
-            "frontmatter": {},
+            "content": "This is an index file",
+            "frontmatter": {"title": "My index"},
         },
     }
 
