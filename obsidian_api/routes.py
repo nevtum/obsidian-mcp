@@ -31,8 +31,8 @@ async def read_note_content(slug: str, vault: ObsidianVault = Depends(get_vault)
     try:
         note = vault.fetch_note_by_slug(slug)
         return PlainTextResponse(note.content)
-    except NoteMissingException:
-        raise HTTPException(status_code=404, detail="Note not found")
+    except NoteMissingException as ex:
+        raise HTTPException(status_code=404, detail=str(ex))
 
 
 @router.get("/notes/{slug}/links", response_model=FindNoteLinksResponse)
