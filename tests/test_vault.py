@@ -38,19 +38,22 @@ def test_find_relevant_notes_within_hops(vault):
 
     assert results == [
         {
+            "slug": "note2",
             "content_summary": "This is the second",
+            "frontmatter": {},
             "distance": 1,
-            "filename": "note2.md",
         },
         {
+            "slug": "note3",
             "content_summary": "This is the third ",
+            "frontmatter": {},
             "distance": 1,
-            "filename": "note3.md",
         },
         {
+            "slug": "note4",
             "content_summary": "This is the fourth",
+            "frontmatter": {},
             "distance": 2,
-            "filename": "note4.md",
         },
     ]
 

@@ -40,8 +40,9 @@ class ObsidianVault:
                 if current_hop > 0:
                     relevant_notes.append(
                         {
-                            "filename": current_note.filename,
+                            "slug": current_note.slug,
                             "content_summary": current_note.content[:char_limit],
+                            "frontmatter": current_note.frontmatter,
                             "distance": current_hop,
                         }
                     )

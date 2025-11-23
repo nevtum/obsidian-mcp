@@ -27,8 +27,9 @@ class FindRelevantNotesParams(BaseModel):
 
 
 class RelevantNotesItem(BaseModel):
-    filename: str
+    slug: str
     content_summary: str
+    frontmatter: dict
     distance: int
 
 
