@@ -20,7 +20,7 @@ async def index():
 
 
 @router.get("/notes/{slug}/content")
-async def read_raw_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
+async def read_note_content(slug: str, vault: ObsidianVault = Depends(get_vault)):
     try:
         note = vault.fetch_note_by_slug(slug)
         return PlainTextResponse(note.content)
@@ -59,7 +59,7 @@ async def find_relevant_notes(
 
 
 @router.get("/notes/{slug}")
-async def read_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
+async def get_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
     try:
         note = vault.fetch_note_by_slug(slug)
         return {

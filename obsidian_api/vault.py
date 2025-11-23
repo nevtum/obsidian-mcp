@@ -60,14 +60,15 @@ class ObsidianVault:
                     self._load_note_file(os.path.join(root, filename))
 
     def _load_note_file(self, filepath):
-        with open(filepath, "r") as file:
-            content = file.read()
         slug = os.path.basename(filepath)[:-3]  # Remove the '.md' extension for slug
-        print(f"Loaded note: {slug} from {filepath}")
         if slug in self.notes:
             # TODO: unit test this logic
             raise DuplicateSlugDetected(slug)
-        self.notes[slug] = Note(slug=slug, filename=filepath, content=content)
+
+        with open(filepath, "r") as file:
+            text = file.read()
+            print(f"Loaded note: {slug} from {filepath}")
+            self.notes[slug] = Note(slug=slug, filename=filepath, text=text)
 
     def watch_changes(self):
         """A mock implementation that simulates change detection."""

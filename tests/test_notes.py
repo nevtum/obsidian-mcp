@@ -21,11 +21,11 @@ tags:
 
 @pytest.fixture
 def sample_note():
-    text = "This is a note about myself. You can find more in [[projects]] and [[hobbies]]."
+    content = "This is a note about myself. You can find more in [[projects]] and [[hobbies]]."
     return Note(
         slug="about-me",
         filename="test_data/about-me.md",
-        content=f"{FRONTMATTER1}\n{text}",
+        text=f"{FRONTMATTER1}\n{content}",
     )
 
 
@@ -42,15 +42,15 @@ def vault():
     ],
 )
 def test_note_initialization(slug, filename, frontmatter):
-    text = "This is a note about myself. You can find more in [[projects]] and [[hobbies]]."
-    content = f"{frontmatter}\n{text}"
+    content = "This is a note about myself. You can find more in [[projects]] and [[hobbies]]."
+    text = f"{frontmatter}\n{content}"
     note = Note(
         slug=slug,
         filename=filename,
-        content=content,
+        text=text,
     )
-    assert note.content == text
-    assert note.raw_content == content
+    assert note.text == text
+    assert note.content == content
     assert note.frontmatter == {
         "title": "About Me",
         "tags": ["personal", "introduction"],
