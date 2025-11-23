@@ -6,6 +6,13 @@ from fastapi.responses import PlainTextResponse, RedirectResponse
 from obsidian_api.exceptions import NoteMissingException
 from obsidian_api.vault import ObsidianVault
 
+from .schema import (
+    FindNoteLinksResponse,
+    FindRelevantNotesResponse,
+    GetNoteResponse,
+    ListNoteSlugsResponse,
+)
+
 router = APIRouter()
 
 
@@ -19,7 +26,7 @@ async def index():
     return RedirectResponse("/docs")
 
 
-@router.get("/notes/{slug}/content")
+@router.get("/notes/{slug}/content", response_model=str)
 async def read_note_content(slug: str, vault: ObsidianVault = Depends(get_vault)):
     try:
         note = vault.fetch_note_by_slug(slug)
@@ -28,10 +35,10 @@ async def read_note_content(slug: str, vault: ObsidianVault = Depends(get_vault)
         raise HTTPException(status_code=404, detail="Note not found")
 
 
-@router.get("/notes/{slug}/links")
+@router.get("/notes/{slug}/links", response_model=FindNoteLinksResponse)
 async def find_links(slug: str, vault: ObsidianVault = Depends(get_vault)):
     note = vault.fetch_note_by_slug(slug)
-    links = note.extract_links()  # Assumes Note class has this method
+    links = note.extract_links()
     return {
         "params": {
             "slug": slug,
@@ -40,7 +47,7 @@ async def find_links(slug: str, vault: ObsidianVault = Depends(get_vault)):
     }
 
 
-@router.get("/notes/{slug}/relevant")
+@router.get("/notes/{slug}/relevant", response_model=FindRelevantNotesResponse)
 async def find_relevant_notes(
     slug: str,
     max_hops: int = 2,
@@ -58,7 +65,7 @@ async def find_relevant_notes(
     }
 
 
-@router.get("/notes/{slug}")
+@router.get("/notes/{slug}", response_model=GetNoteResponse)
 async def get_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
     try:
         note = vault.fetch_note_by_slug(slug)
@@ -69,6 +76,6 @@ async def get_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
         raise HTTPException(status_code=404, detail="Note not found")
 
 
-@router.get("/notes")
+@router.get("/notes", response_model=ListNoteSlugsResponse)
 async def list_note_slugs(vault: ObsidianVault = Depends(get_vault)):
     return {"results": vault.list_note_slugs()}

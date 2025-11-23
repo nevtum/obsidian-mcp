@@ -34,7 +34,7 @@ class ObsidianVault:
                     relevant_notes.append(
                         {
                             "filename": current_note.filename,
-                            "contents_summary": current_note.content[:char_limit],
+                            "content_summary": current_note.content[:char_limit],
                             "distance": current_hop,
                         }
                     )
