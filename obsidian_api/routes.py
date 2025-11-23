@@ -79,3 +79,8 @@ async def get_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
 @router.get("/notes", response_model=ListNoteSlugsResponse)
 async def list_note_slugs(vault: ObsidianVault = Depends(get_vault)):
     return {"results": vault.list_note_slugs()}
+
+
+@router.get("/search")
+async def search_notes(q: str, vault: ObsidianVault = Depends(get_vault)):
+    return {"results": vault.search_notes(q)}

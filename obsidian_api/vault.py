@@ -1,15 +1,21 @@
+import logging
 import os
-from collections import deque
+import re
+from collections import defaultdict, deque
 
 from obsidian_api.exceptions import DuplicateSlugDetected, NoteMissingException
 from obsidian_api.note import Note
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class ObsidianVault:
     def __init__(self, directory):
         self.directory = directory
         self.notes = {}
-        self.load_notes()  # Load notes from the directory
+        self.load_notes()
+        self.build_index()
 
     def list_note_slugs(self):
         return list(self.notes.keys())
@@ -45,6 +51,9 @@ class ObsidianVault:
 
         return relevant_notes
 
+    def search_notes(self, query: str):
+        return self.index.get(query, [])
+
     def find_ancestors(self, slug, max_hops=2, char_limit=100):
         raise NotImplementedError("find_ancestors method is not implemented yet.")
 
@@ -59,6 +68,15 @@ class ObsidianVault:
                 if filename.endswith(".md"):
                     self._load_note_file(os.path.join(root, filename))
 
+    def build_index(self):
+        self.index = defaultdict(list)
+        for slug, note in self.notes.items():
+            words = set(re.findall(r"\w+", note.content.lower()))
+            for word in words:
+                self.index[word].append(slug)
+
+        logger.info(f"Index built successfully! {len(self.index)} total words indexed.")
+
     def _load_note_file(self, filepath):
         slug = os.path.basename(filepath)[:-3]  # Remove the '.md' extension for slug
         if slug in self.notes:
@@ -67,7 +85,7 @@ class ObsidianVault:
 
         with open(filepath, "r") as file:
             text = file.read()
-            print(f"Loaded note: {slug} from {filepath}")
+            logger.info(f"Loaded note: {slug} from {filepath}")
             self.notes[slug] = Note(slug=slug, filename=filepath, text=text)
 
     def watch_changes(self):

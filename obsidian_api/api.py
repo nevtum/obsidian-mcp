@@ -1,4 +1,8 @@
+import logging
+
 from fastapi import FastAPI
+
+logging.basicConfig()
 
 
 def create_app():
