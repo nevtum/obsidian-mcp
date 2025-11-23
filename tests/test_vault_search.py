@@ -30,14 +30,21 @@ def vault():
 
 def test_search_notes_exact_match(vault):
     result = vault.search_notes("first")
-    assert "note1" in result, "Should return 'note1' for exact match on 'first'."
+    assert result == [{"frontmatter": {}, "slug": "note1"}], (
+        "Should return 'note1' for exact match on 'first'."
+    )
 
     result = vault.search_notes("second")
-    assert "note2" in result, "Should return 'note2' for exact match on 'second'."
+
+    assert result == [{"frontmatter": {}, "slug": "note2"}], (
+        "Should return 'note2' for exact match on 'second'."
+    )
 
     result = vault.search_notes("different")
-    assert "note2" in result, "Should return 'note2' for exact match on 'different'."
-    assert "note3" in result, "Should return 'note3' for exact match on 'different'."
+    assert result == [
+        {"frontmatter": {}, "slug": "note2"},
+        {"frontmatter": {}, "slug": "note3"},
+    ], "Should return 'note2' and 'note3' for exact match on 'different'."
 
 
 def test_search_notes_no_match(vault):

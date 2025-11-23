@@ -54,7 +54,13 @@ class ObsidianVault:
         return relevant_notes
 
     def search_notes(self, query: str):
-        return self.index.get(query, [])
+        return [
+            {
+                "slug": current_note.slug,
+                "frontmatter": current_note.frontmatter,
+            }
+            for current_note in self._notes_from_slugs(self.index.get(query, []))
+        ]
 
     def fuzzy_search_notes(self, query: str):
         slugs = set()
@@ -62,7 +68,13 @@ class ObsidianVault:
             for slug in self.index[word]:
                 slugs.add(slug)
 
-        return list(slugs)
+        return [
+            {
+                "slug": current_note.slug,
+                "frontmatter": current_note.frontmatter,
+            }
+            for current_note in self._notes_from_slugs(list(slugs))
+        ]
 
     def find_ancestors(self, slug, max_hops=2, char_limit=100):
         raise NotImplementedError("find_ancestors method is not implemented yet.")
@@ -86,6 +98,10 @@ class ObsidianVault:
                 self.index[word].append(slug)
 
         logger.info(f"Index built successfully! {len(self.index)} total words indexed.")
+
+    def _notes_from_slugs(self, slugs: list[str]):
+        for current_slug in slugs:
+            yield self.fetch_note_by_slug(current_slug)
 
     def _load_note_file(self, filepath):
         slug = os.path.basename(filepath)[:-3]  # Remove the '.md' extension for slug
