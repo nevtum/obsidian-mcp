@@ -2,6 +2,7 @@ import logging
 import os
 import re
 from collections import defaultdict, deque
+from difflib import get_close_matches
 
 from obsidian_api.exceptions import DuplicateSlugDetected, NoteMissingException
 from obsidian_api.note import Note
@@ -53,6 +54,14 @@ class ObsidianVault:
 
     def search_notes(self, query: str):
         return self.index.get(query, [])
+
+    def fuzzy_search_notes(self, query: str):
+        slugs = set()
+        for word in get_close_matches(query, self.index.keys()):
+            for slug in self.index[word]:
+                slugs.add(slug)
+
+        return list(slugs)
 
     def find_ancestors(self, slug, max_hops=2, char_limit=100):
         raise NotImplementedError("find_ancestors method is not implemented yet.")

@@ -82,5 +82,7 @@ async def list_note_slugs(vault: ObsidianVault = Depends(get_vault)):
 
 
 @router.get("/search")
-async def search_notes(q: str, vault: ObsidianVault = Depends(get_vault)):
-    return {"results": vault.search_notes(q)}
+async def search_notes(
+    q: str, exact: bool = False, vault: ObsidianVault = Depends(get_vault)
+):
+    return {"results": vault.search_notes(q) if exact else vault.fuzzy_search_notes(q)}
