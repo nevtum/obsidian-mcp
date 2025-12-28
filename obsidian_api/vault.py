@@ -97,7 +97,7 @@ class ObsidianVault:
             for word in words:
                 self.index[word].append(slug)
 
-        logger.info(f"Index built successfully! {len(self.index)} total words indexed.")
+        # logger.info(f"Index built successfully! {len(self.index)} total words indexed.")
 
     def _notes_from_slugs(self, slugs: list[str]):
         for current_slug in slugs:
@@ -111,7 +111,7 @@ class ObsidianVault:
 
         with open(filepath, "r") as file:
             text = file.read()
-            logger.info(f"Loaded note: {slug} from {filepath}")
+            # logger.info(f"Loaded note: {slug} from {filepath}")
             self.notes[slug] = Note(slug=slug, filename=filepath, text=text)
 
     def watch_changes(self):
