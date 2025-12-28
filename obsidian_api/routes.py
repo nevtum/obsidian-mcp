@@ -11,6 +11,7 @@ from .schema import (
     FindRelevantNotesResponse,
     GetNoteResponse,
     ListNoteSlugsResponse,
+    SearchNotesResponse,
 )
 
 router = APIRouter()
@@ -71,12 +72,12 @@ async def list_note_slugs(vault: ObsidianVault = Depends(get_vault)):
     return {"results": vault.list_note_slugs()}
 
 
-@router.get("/search")
+@router.get("/search", response_model=SearchNotesResponse)
 async def search_notes(
     q: str, exact: bool = False, vault: ObsidianVault = Depends(get_vault)
 ):
     """
-    Search notes across the entire vault.
+    Search notes across the entire vault. Keep search query to a maximum of 2-3 words for better results.
 
     Discovers notes matching a specific search query with flexible matching options.
 
@@ -100,7 +101,16 @@ async def search_notes(
     Returns:
     --------
     {
-        "results": [str]  # Matching note slugs
+        "params": {
+            "query": str,
+            "exact": bool
+        },
+        "results": [
+            {
+                "slug": str,        # Matching note slug
+                "frontmatter": dict # Note's metadata dictionary
+            }
+        ]
     }
 
     Search Modes:
@@ -117,27 +127,35 @@ async def search_notes(
     ---------
     GET /search?q=python
     Response: {
+        "params": {
+            "query": "python",
+            "exact": false
+        },
         "results": [
-            "python-basics",
-            "data-science-python",
-            "programming-tools"
+            {
+                "slug": "python-basics",
+                "frontmatter": {
+                    "tags": ["programming", "tutorial"],
+                    "difficulty": "beginner"
+                }
+            },
+            {
+                "slug": "data-science-python",
+                "frontmatter": {
+                    "tags": ["data-science", "programming"],
+                    "category": "analysis"
+                }
+            }
         ]
     }
-
-    GET /search?q=python&exact=true
-    Response: {
-        "results": [
-            "python-programming"
-        ]
-    }
-
-    Performance:
-    ------------
-    - Searches entire vault
-    - Lightweight operation
-    - Results not ranked by relevance
     """
-    return {"results": vault.search_notes(q) if exact else vault.fuzzy_search_notes(q)}
+    return {
+        "params": {
+            "query": q,
+            "exact": exact,
+        },
+        "results": vault.search_notes(q) if exact else vault.fuzzy_search_notes(q),
+    }
 
 
 @router.get("/{slug}/content", response_model=str)

@@ -40,3 +40,18 @@ class FindRelevantNotesResponse(BaseModel):
 
 class ListNoteSlugsResponse(BaseModel):
     results: list[str]
+
+
+class SearchNotesParams(BaseModel):
+    query: str
+    exact: bool
+
+
+class SearchNotesItem(BaseModel):
+    slug: str
+    frontmatter: dict
+
+
+class SearchNotesResponse(BaseModel):
+    params: SearchNotesParams
+    results: list[SearchNotesItem]
