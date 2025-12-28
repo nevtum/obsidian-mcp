@@ -8,7 +8,7 @@ from obsidian_api.api import app
 
 logging.basicConfig()
 
-mcp = FastApiMCP(app, "Personal knowledge repository")
+mcp = FastApiMCP(app, "Personal knowledge vault")
 mcp.mount_http()
 
 

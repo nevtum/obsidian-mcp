@@ -2,15 +2,16 @@ from os import getenv
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import PlainTextResponse
 
+# from fastapi.responses import PlainTextResponse
 from obsidian_api.exceptions import NoteMissingException
 from obsidian_api.vault import ObsidianVault
 
 from .schema import (
+    BatchGetNotesRequest,
     FindNoteLinksResponse,
     FindRelevantNotesResponse,
-    GetNoteResponse,
+    # GetNoteResponse,
     ListNoteSlugsResponse,
     NoteDetails,
     SearchNotesResponse,
@@ -79,14 +80,13 @@ async def search_notes(
     q: str, exact: bool = False, vault: ObsidianVault = Depends(get_vault)
 ):
     """
-    Search notes across the entire vault. Keep search query to a maximum of 2-3 words for better results.
-
     Discovers notes matching a specific search query with flexible matching options.
 
     Parameters:
     -----------
     q : str
         Search query to find matching notes.
+        - query must not exceed 2 words
         - Supports words, phrases, partial content
         - Case-insensitive
         - Searches entire note contents
@@ -151,6 +151,11 @@ async def search_notes(
         ]
     }
     """
+    if len(q.split()) > 2:
+        raise HTTPException(
+            status_code=400, detail="Search query should not exceed 2 words"
+        )
+
     return {
         "params": {
             "query": q,
@@ -160,41 +165,41 @@ async def search_notes(
     }
 
 
-@router.get("/{slug}/content", response_model=str)
-async def read_raw_note_content(slug: str, vault: ObsidianVault = Depends(get_vault)):
-    """
-    Retrieve the complete text content of a specific note.
+# @router.get("/{slug}/content", response_model=str)
+# async def read_raw_note_content(slug: str, vault: ObsidianVault = Depends(get_vault)):
+#     """
+#     Retrieve the complete text content of a specific note.
 
-    Fetches the full raw text of a note using its unique slug identifier.
+#     Fetches the full raw text of a note using its unique slug identifier.
 
-    Parameters:
-    -----------
-    slug : str
-        Unique note identifier, typically the filename without extension.
-        Converted to lowercase with hyphens.
-        Example: "Machine Learning Basics.md" becomes "machine-learning-basics"
+#     Parameters:
+#     -----------
+#     slug : str
+#         Unique note identifier, typically the filename without extension.
+#         Converted to lowercase with hyphens.
+#         Example: "Machine Learning Basics.md" becomes "machine-learning-basics"
 
-    Response:
-    ---------
-    Plain text content of the entire note.
+#     Response:
+#     ---------
+#     Plain text content of the entire note.
 
-    Errors:
-    -------
-    404 Error if note is not found, which can occur due to:
-    - Incorrect slug spelling
-    - Deleted note
-    - Non-existent note in vault
+#     Errors:
+#     -------
+#     404 Error if note is not found, which can occur due to:
+#     - Incorrect slug spelling
+#     - Deleted note
+#     - Non-existent note in vault
 
-    Example:
-    --------
-    GET /notes/machine-learning-basics/content
-    → Returns full note text, including markdown formatting
-    """
-    try:
-        note = vault.fetch_note_by_slug(slug)
-        return PlainTextResponse(note.content)
-    except NoteMissingException as ex:
-        raise HTTPException(status_code=404, detail=str(ex))
+#     Example:
+#     --------
+#     GET /notes/machine-learning-basics/content
+#     → Returns full note text, including markdown formatting
+#     """
+#     try:
+#         note = vault.fetch_note_by_slug(slug)
+#         return PlainTextResponse(note.content)
+#     except NoteMissingException as ex:
+#         raise HTTPException(status_code=404, detail=str(ex))
 
 
 @router.get("/{slug}/links", response_model=FindNoteLinksResponse)
@@ -346,71 +351,73 @@ async def find_relevant_notes(
     }
 
 
-@router.get("/{slug}", response_model=GetNoteResponse)
-async def get_note_details(slug: str, vault: ObsidianVault = Depends(get_vault)):
-    """
-    Retrieve complete details of a specific note.
+# @router.get("/{slug}", response_model=GetNoteResponse)
+# async def get_note_details(slug: str, vault: ObsidianVault = Depends(get_vault)):
+#     """
+#     Retrieve complete details of a specific note.
 
-    Fetches comprehensive information about a note in the vault.
+#     Fetches comprehensive information about a note in the vault.
 
-    Parameters:
-    -----------
-    slug : str
-        Unique note identifier (lowercase, hyphen-separated).
-        Example: "project-management-guide"
+#     Parameters:
+#     -----------
+#     slug : str
+#         Unique note identifier (lowercase, hyphen-separated).
+#         Example: "project-management-guide"
 
-    Returns:
-    --------
-    GetNoteResponse
-        Complete note details including content and metadata.
+#     Returns:
+#     --------
+#     GetNoteResponse
+#         Complete note details including content and metadata.
 
-    Response Structure:
-    ------------------
-    {
-        "results": {
-            "slug": str,
-            "content": str,
-            "frontmatter": dict
-        }
-    }
+#     Response Structure:
+#     ------------------
+#     {
+#         "results": {
+#             "slug": str,
+#             "content": str,
+#             "frontmatter": dict
+#         }
+#     }
 
-    Features:
-    ---------
-    - Returns full note content
-    - Includes frontmatter metadata
-    - Provides comprehensive note information
+#     Features:
+#     ---------
+#     - Returns full note content
+#     - Includes frontmatter metadata
+#     - Provides comprehensive note information
 
-    Example:
-    --------
-    GET /notes/data-science
-    Response: {
-        "results": {
-            "slug": "data-science",
-            "content": "# Data Science Overview...",
-            "frontmatter": {
-                "tags": ["analysis", "programming"],
-                "created": "2023-01-15"
-            }
-        }
-    }
+#     Example:
+#     --------
+#     GET /notes/data-science
+#     Response: {
+#         "results": {
+#             "slug": "data-science",
+#             "content": "# Data Science Overview...",
+#             "frontmatter": {
+#                 "tags": ["analysis", "programming"],
+#                 "created": "2023-01-15"
+#             }
+#         }
+#     }
 
-    Errors:
-    -------
-    404 Error if note is not found
-    """
-    try:
-        note = vault.fetch_note_by_slug(slug)
-        return {
-            "results": note.as_json(),
-        }
-    except NoteMissingException:
-        raise HTTPException(status_code=404, detail="Note not found")
+#     Errors:
+#     -------
+#     404 Error if note is not found
+#     """
+#     try:
+#         note = vault.fetch_note_by_slug(slug)
+#         return {
+#             "results": note.as_json(),
+#         }
+#     except NoteMissingException:
+#         raise HTTPException(status_code=404, detail="Note not found")
 
 
 @router.post("/details", response_model=List[NoteDetails])
-async def get_notes_batch(slugs: List[str], vault: ObsidianVault = Depends(get_vault)):
+async def get_notes_batch(
+    request: BatchGetNotesRequest, vault: ObsidianVault = Depends(get_vault)
+):
     """
-    Retrieve complete details for multiple notes in a single request.
+    Fetch details for multiple notes in a single request.
 
     Parameters:
     -----------
@@ -428,8 +435,11 @@ async def get_notes_batch(slugs: List[str], vault: ObsidianVault = Depends(get_v
 
     Example:
     --------
-    POST /notes/batch
-    Request body: ["data-science", "machine-learning"]
+    POST /notes/details
+    Request body:
+        {
+            "slugs": ["data-science", "machine-learning"]
+        }
     Response: [
         {
             "slug": "data-science",
@@ -445,7 +455,7 @@ async def get_notes_batch(slugs: List[str], vault: ObsidianVault = Depends(get_v
     """
     try:
         notes = []
-        for slug in slugs:
+        for slug in request.slugs:
             note = vault.fetch_note_by_slug(slug)
             notes.append(note.as_json())
         return notes

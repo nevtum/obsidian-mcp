@@ -55,3 +55,7 @@ class SearchNotesItem(BaseModel):
 class SearchNotesResponse(BaseModel):
     params: SearchNotesParams
     results: list[SearchNotesItem]
+
+
+class BatchGetNotesRequest(BaseModel):
+    slugs: list[str]
