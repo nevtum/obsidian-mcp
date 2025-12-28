@@ -7,10 +7,6 @@ class NoteDetails(BaseModel):
     frontmatter: dict
 
 
-class GetNoteResponse(BaseModel):
-    results: NoteDetails
-
-
 class FindLinksParams(BaseModel):
     slug: str
 
@@ -59,3 +55,8 @@ class SearchNotesResponse(BaseModel):
 
 class BatchGetNotesRequest(BaseModel):
     slugs: list[str]
+
+
+class GetBatchNotesResponse(BaseModel):
+    params: BatchGetNotesRequest
+    results: list[NoteDetails]
