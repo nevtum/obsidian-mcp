@@ -1,7 +1,7 @@
 from os import getenv
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import PlainTextResponse, RedirectResponse
+from fastapi.responses import PlainTextResponse
 
 from obsidian_api.exceptions import NoteMissingException
 from obsidian_api.vault import ObsidianVault
@@ -21,50 +21,154 @@ def get_vault():
     return ObsidianVault(directory=path)
 
 
-@router.get("/")
-async def index():
-    return RedirectResponse("/docs")
-
-
-@router.get("/notes/{slug}/content", response_model=str)
-async def read_note_content(slug: str, vault: ObsidianVault = Depends(get_vault)):
+@router.get("/", response_model=ListNoteSlugsResponse)
+async def list_note_slugs(vault: ObsidianVault = Depends(get_vault)):
     """
-    Retrieve the full text content of a specific note by its slug.
+    Retrieve a comprehensive list of all note slugs in the vault.
 
-    This endpoint fetches the raw text content of a note in an Obsidian vault.
+    Provides an overview of all available notes by their unique identifiers.
+
+    Returns:
+    --------
+    ListNoteSlugsResponse
+        A collection of all note slugs in the vault.
+
+    Response Structure:
+    ------------------
+    {
+        "results": [str]  # List of all note slugs
+    }
+
+    Features:
+    ---------
+    - Returns all note slugs in the vault
+    - Sorted alphabetically
+    - Provides quick inventory of available notes
+
+    Example:
+    --------
+    GET /notes
+    Response: {
+        "results": [
+            "data-science",
+            "machine-learning",
+            "project-management",
+            "weekly-review"
+        ]
+    }
+
+    Use Cases:
+    ----------
+    - Generating note indexes
+    - Building navigation menus
+    - Exploring vault contents
+
+    Notes:
+    ------
+    - Number of results depends on vault size
+    - No additional filtering applied
+    """
+    return {"results": vault.list_note_slugs()}
+
+
+@router.get("/search")
+async def search_notes(
+    q: str, exact: bool = False, vault: ObsidianVault = Depends(get_vault)
+):
+    """
+    Search notes across the entire vault.
+
+    Discovers notes matching a specific search query with flexible matching options.
+
+    Parameters:
+    -----------
+    q : str
+        Search query to find matching notes.
+        - Supports words, phrases, partial content
+        - Case-insensitive
+        - Searches entire note contents
+
+    exact : bool, optional
+        Search matching strategy.
+        - False (default): Fuzzy search
+          * Matches similar words and themes
+          * Broader, more flexible results
+        - True: Strict exact match
+          * Requires precise search term
+          * Narrow, precise results
+
+    Returns:
+    --------
+    {
+        "results": [str]  # Matching note slugs
+    }
+
+    Search Modes:
+    -------------
+    1. Fuzzy Search (default):
+       GET /search?q=data science
+       Returns notes about data science, machine learning, etc.
+
+    2. Exact Search:
+       GET /search?q="neural networks"
+       Returns only notes with exact phrase
+
+    Examples:
+    ---------
+    GET /search?q=python
+    Response: {
+        "results": [
+            "python-basics",
+            "data-science-python",
+            "programming-tools"
+        ]
+    }
+
+    GET /search?q=python&exact=true
+    Response: {
+        "results": [
+            "python-programming"
+        ]
+    }
+
+    Performance:
+    ------------
+    - Searches entire vault
+    - Lightweight operation
+    - Results not ranked by relevance
+    """
+    return {"results": vault.search_notes(q) if exact else vault.fuzzy_search_notes(q)}
+
+
+@router.get("/{slug}/content", response_model=str)
+async def read_raw_note_content(slug: str, vault: ObsidianVault = Depends(get_vault)):
+    """
+    Retrieve the complete text content of a specific note.
+
+    Fetches the full raw text of a note using its unique slug identifier.
 
     Parameters:
     -----------
     slug : str
-        The unique identifier (slug) of the note to retrieve.
-        This is typically derived from the note's filename without the extension.
-        Example: For a note named "Machine Learning Basics.md", the slug would be "machine-learning-basics"
+        Unique note identifier, typically the filename without extension.
+        Converted to lowercase with hyphens.
+        Example: "Machine Learning Basics.md" becomes "machine-learning-basics"
 
-    Responses:
-    ----------
-    200 OK:
-        Returns the full text content of the note as plain text.
-        Content-Type: text/plain
-
-    404 Not Found:
-        Raised if no note exists with the provided slug.
-        This can happen if:
-        - The slug is misspelled
-        - The note has been deleted
-        - The note does not exist in the vault
-
-    Example Usage:
-    --------------
-    Request: GET /notes/machine-learning-basics/content
     Response:
-        "# Machine Learning Basics
+    ---------
+    Plain text content of the entire note.
 
-        Machine learning is a method of data analysis that..."
-
-    Raises:
+    Errors:
     -------
-    HTTPException
-        A 404 error is raised if the note cannot be found in the vault.
+    404 Error if note is not found, which can occur due to:
+    - Incorrect slug spelling
+    - Deleted note
+    - Non-existent note in vault
+
+    Example:
+    --------
+    GET /notes/machine-learning-basics/content
+    → Returns full note text, including markdown formatting
     """
     try:
         note = vault.fetch_note_by_slug(slug)
@@ -73,64 +177,52 @@ async def read_note_content(slug: str, vault: ObsidianVault = Depends(get_vault)
         raise HTTPException(status_code=404, detail=str(ex))
 
 
-@router.get("/notes/{slug}/links", response_model=FindNoteLinksResponse)
-async def find_links(slug: str, vault: ObsidianVault = Depends(get_vault)):
+@router.get("/{slug}/links", response_model=FindNoteLinksResponse)
+async def find_note_links(slug: str, vault: ObsidianVault = Depends(get_vault)):
     """
-    Extract and retrieve all links present within a specific note.
+    Discover all links within a specific note.
 
-    This endpoint discovers the interconnected network of links
-    in a given note, which is crucial for understanding note relationships in an
-    Obsidian vault.
+    Extracts and lists all internal links found in a note's content.
 
     Parameters:
     -----------
     slug : str
-        The unique identifier (slug) of the note to extract links from.
-        This is typically derived from the note's filename without the extension.
-        Example: For a note named "Machine Learning Basics.md", the slug would be "machine-learning-basics"
+        Unique note identifier (lowercase, hyphen-separated).
+        Derived from filename without extension.
+        Example: "machine-learning-basics"
 
-    Responses:
-    ----------
-    200 OK:
-        Returns a structured response containing:
-        - params: The input parameters used for the request
-        - links: A list of all links found within the note
+    Returns:
+    --------
+    List of note links extracted from the document.
 
-    Response Schema:
-    ---------------
-    {
-        "params": {
-            "slug": str  # The input note slug
-        },
-        "links": [
-            # List of links extracted from the note
-            # Each link could be a direct wiki-style link or markdown link
-        ]
-    }
-
-    Example Usage:
-    --------------
-    Request: GET /notes/machine-learning-basics/links
     Response:
+    ---------
     {
-        "params": {"slug": "machine-learning-basics"},
+        "params": {"slug": str},
+        "links": [str]
+    }
+
+    Features:
+    ---------
+    - Finds wiki-style and markdown links
+    - Links are extracted directly from note content
+    - Does not verify link existence in vault
+
+    Example:
+    --------
+    GET /notes/project-management/links
+    Response: {
+        "params": {"slug": "project-management"},
         "links": [
-            "neural-networks",
-            "deep-learning",
-            "data-science"
+            "team-collaboration",
+            "agile-methodology",
+            "resource-planning"
         ]
     }
 
-    Notes:
-    ------
-    - Links are extracted directly from the note's content
-    - Supports various link formats typical in Markdown and Obsidian
-    - Does not validate if linked notes actually exist in the vault
-
-    Raises:
+    Errors:
     -------
-    HTTPException
-        A 404 error is raised if the note cannot be found in the vault.
+    404 Error if note is not found
     """
     note = vault.fetch_note_by_slug(slug)
     links = note.extract_links()
@@ -142,7 +234,7 @@ async def find_links(slug: str, vault: ObsidianVault = Depends(get_vault)):
     }
 
 
-@router.get("/notes/{slug}/relevant", response_model=FindRelevantNotesResponse)
+@router.get("/{slug}/relevant", response_model=FindRelevantNotesResponse)
 async def find_relevant_notes(
     slug: str,
     max_hops: int = 2,
@@ -150,81 +242,78 @@ async def find_relevant_notes(
     vault: ObsidianVault = Depends(get_vault),
 ):
     """
-    Discover and retrieve notes that are closely related to a given note.
+    Discover connected and contextually related notes.
 
-    This endpoint helps explore the interconnected knowledge network within a vault
-    by finding notes that are contextually relevant to the specified note.
+    Explores the knowledge network by finding notes linked to the specified note.
 
     Parameters:
     -----------
     slug : str
-        The unique identifier (slug) of the reference note.
-        This is typically derived from the note's filename without the extension.
-        Example: For a note named "Machine Learning Basics.md", the slug would be "machine-learning-basics"
+        Unique note identifier (lowercase, hyphen-separated).
+        Example: "machine-learning-basics"
 
     max_hops : int, optional
-        The maximum number of link "hops" to traverse when finding related notes.
-        - Default is 2, meaning it will explore links up to two steps away from the original note
-        - A higher value increases the breadth of related notes, but may slow down the search
-        - A lower value provides more focused, immediate connections
+        Maximum link traversal depth.
+        - Default: 2 (explores connections up to two steps away)
+        - Higher values: Broader but slower search
+        - Lower values: More focused results
 
     char_limit : int, optional
-        Limits the number of characters returned for each relevant note's preview.
-        - Default is 100 characters
-        - Helps keep the response concise and manageable
-        - Useful for quickly scanning related note summaries
+        Maximum characters for note previews.
+        - Default: 100 characters
+        - Keeps results concise and scannable
 
-    Responses:
-    ----------
-    200 OK:
-        Returns a structured response containing:
-        - params: The input parameters used for the request
-        - results: A list of relevant notes with their details
+    Returns:
+    --------
+    FindRelevantNotesResponse
+        Collection of related notes with context.
 
-    Response Schema:
-    ---------------
+    Response Structure:
+    ------------------
     {
         "params": {
-            "slug": str,           # The input reference note
-            "max_hops": int,       # Number of link hops
-            "char_limit": int      # Character preview limit
+            "slug": str,
+            "max_hops": int,
+            "char_limit": int
         },
         "results": [
             {
-                "slug": str,        # Slug of the related note
-                "preview": str,     # Short preview of the note's content
-                # Other possible note metadata
+                "slug": str,
+                "content_summary": str,
+                "distance": int
             }
         ]
     }
 
-    Example Usage:
-    --------------
-    Request: GET /notes/machine-learning/relevant?max_hops=3&char_limit=150
-    Response:
-    {
+    Features:
+    ---------
+    - Finds notes through direct and indirect links
+    - Connections based on vault's link structure
+    - Results show proximity to original note
+
+    Example:
+    --------
+    GET /notes/data-science/relevant?max_hops=3&char_limit=150
+    Response: {
         "params": {
-            "slug": "machine-learning",
+            "slug": "data-science",
             "max_hops": 3,
             "char_limit": 150
         },
         "results": [
             {
-                "slug": "neural-networks",
-                "preview": "Neural networks are a fundamental component of deep learning..."
-            },
-            {
-                "slug": "data-science-techniques",
-                "preview": "Exploring various approaches to solving complex data science challenges..."
+                "slug": "machine-learning",
+                "content_summary": "Advanced techniques for predictive analysis...",
+                "distance": 1
             }
         ]
     }
 
-    Notes:
-    ------
-    - The relevance is determined by direct and indirect links between notes
-    - Results are not ranked by importance, but by connection proximity
-    - The number and nature of results depend on your vault's link structure
+    Troubleshooting:
+    ---------------
+    - Ensure note exists in vault
+    - Check note's internal linking
+    - Adjust max_hops for broader/narrower results
     """
     relevant_notes = vault.find_relevant_notes(slug, max_hops, char_limit)
     return {
@@ -237,8 +326,58 @@ async def find_relevant_notes(
     }
 
 
-@router.get("/notes/{slug}", response_model=GetNoteResponse)
-async def get_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
+@router.get("/{slug}", response_model=GetNoteResponse)
+async def get_note_details(slug: str, vault: ObsidianVault = Depends(get_vault)):
+    """
+    Retrieve complete details of a specific note.
+
+    Fetches comprehensive information about a note in the vault.
+
+    Parameters:
+    -----------
+    slug : str
+        Unique note identifier (lowercase, hyphen-separated).
+        Example: "project-management-guide"
+
+    Returns:
+    --------
+    GetNoteResponse
+        Complete note details including content and metadata.
+
+    Response Structure:
+    ------------------
+    {
+        "results": {
+            "slug": str,
+            "content": str,
+            "frontmatter": dict
+        }
+    }
+
+    Features:
+    ---------
+    - Returns full note content
+    - Includes frontmatter metadata
+    - Provides comprehensive note information
+
+    Example:
+    --------
+    GET /notes/data-science
+    Response: {
+        "results": {
+            "slug": "data-science",
+            "content": "# Data Science Overview...",
+            "frontmatter": {
+                "tags": ["analysis", "programming"],
+                "created": "2023-01-15"
+            }
+        }
+    }
+
+    Errors:
+    -------
+    404 Error if note is not found
+    """
     try:
         note = vault.fetch_note_by_slug(slug)
         return {
@@ -246,68 +385,3 @@ async def get_note(slug: str, vault: ObsidianVault = Depends(get_vault)):
         }
     except NoteMissingException:
         raise HTTPException(status_code=404, detail="Note not found")
-
-
-@router.get("/notes", response_model=ListNoteSlugsResponse)
-async def list_note_slugs(vault: ObsidianVault = Depends(get_vault)):
-    return {"results": vault.list_note_slugs()}
-
-
-@router.get("/search")
-async def search_notes(
-    q: str, exact: bool = False, vault: ObsidianVault = Depends(get_vault)
-):
-    """
-    Search for notes across the vault using flexible search strategies.
-
-    This endpoint allows searching through note contents using different matching approaches.
-
-    Parameters:
-    -----------
-    q : str
-        The search query string to find matching notes.
-        - Can be a word, phrase, or partial content from a note
-        - Search is case-insensitive
-        - Supports searching across entire note contents
-
-    exact : bool, optional
-        Determines the search matching strategy.
-        - When False (default): Performs a fuzzy, flexible search
-          * Matches similar words and related content
-          * More lenient, returns broader results
-          * Good for finding notes with similar themes or partial matches
-
-        - When True: Performs an exact, strict search
-          * Requires precise matches of the search term
-          * More restrictive, returns fewer, more precise results
-          * Useful for finding specific content or quotes
-
-    Responses:
-    ----------
-    200 OK:
-        Returns a structured response with search results
-        {
-            "results": [
-                "note-slug-1",
-                "note-slug-2",
-                ...
-            ]
-        }
-
-    Example Usage:
-    --------------
-    1. Fuzzy Search (default):
-       Request: GET /search?q=machine learning
-       Returns notes containing similar or related terms
-
-    2. Exact Search:
-       Request: GET /search?q=machine learning&exact=true
-       Returns only notes with exact phrase match
-
-    Notes:
-    ------
-    - Search is performed across all notes in the vault
-    - Results are returned as a list of note slugs
-    - No guarantee of result order or ranking
-    """
-    return {"results": vault.search_notes(q) if exact else vault.fuzzy_search_notes(q)}

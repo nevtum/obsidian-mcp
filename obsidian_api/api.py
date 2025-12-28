@@ -1,21 +1,19 @@
-import logging
-
 from fastapi import FastAPI
-
-logging.basicConfig()
+from fastapi.responses import RedirectResponse
 
 
 def create_app():
     from .routes import router
 
     app = FastAPI()
-    app.include_router(router)
+
+    @app.get("/")
+    async def index():
+        return RedirectResponse("/docs")
+
+    app.include_router(router, prefix="/notes")
+
     return app
 
 
 app = create_app()
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
