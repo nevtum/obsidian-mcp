@@ -1,5 +1,5 @@
 ### Project Overview
-The goal of this project is to develop a read-only API that interacts with a collection of markdown notes stored in an Obsidian vault. The API will handle the reading and searching of notes and support functionality for detecting changes in the notes, allowing for a framework suitable for use in agentic AI Multi-Channel Processing (MCP) servers.
+The goal of this project is to develop a read-only API that interacts with a collection of markdown notes stored in an Obsidian vault. The API will handle the reading and searching of notes and support functionality for detecting changes in the notes, allowing for a framework suitable for use in agentic AI Model Context Protocol (MCP) servers.
 
 ### Table of Contents
 1. [Functional Requirements](#functional-requirements)
