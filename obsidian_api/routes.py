@@ -1,4 +1,5 @@
 from os import getenv
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
@@ -11,6 +12,7 @@ from .schema import (
     FindRelevantNotesResponse,
     GetNoteResponse,
     ListNoteSlugsResponse,
+    NoteDetails,
     SearchNotesResponse,
 )
 
@@ -403,3 +405,49 @@ async def get_note_details(slug: str, vault: ObsidianVault = Depends(get_vault))
         }
     except NoteMissingException:
         raise HTTPException(status_code=404, detail="Note not found")
+
+
+@router.post("/details", response_model=List[NoteDetails])
+async def get_notes_batch(slugs: List[str], vault: ObsidianVault = Depends(get_vault)):
+    """
+    Retrieve complete details for multiple notes in a single request.
+
+    Parameters:
+    -----------
+    slugs : List[str]
+        List of unique note identifiers to fetch.
+
+    Returns:
+    --------
+    List[NoteDetails]
+        List of notes with their complete details.
+
+    Errors:
+    -------
+    404 Error if any of the specified notes are not found.
+
+    Example:
+    --------
+    POST /notes/batch
+    Request body: ["data-science", "machine-learning"]
+    Response: [
+        {
+            "slug": "data-science",
+            "content": "# Data Science Overview...",
+            "frontmatter": {...}
+        },
+        {
+            "slug": "machine-learning",
+            "content": "# Machine Learning Basics...",
+            "frontmatter": {...}
+        }
+    ]
+    """
+    try:
+        notes = []
+        for slug in slugs:
+            note = vault.fetch_note_by_slug(slug)
+            notes.append(note.as_json())
+        return notes
+    except NoteMissingException as ex:
+        raise HTTPException(status_code=404, detail=str(ex))
