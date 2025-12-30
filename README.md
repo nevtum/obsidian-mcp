@@ -16,16 +16,62 @@ Obsidian MCP is a read-only API designed to interact with markdown notes stored 
 - Python
 - FastAPI
 - Uvicorn
-- Watchdog (for file system monitoring)
 - YAML (for frontmatter parsing)
+- Docker
 
 ## Prerequisites
 
-- Python 3.9+
-- `uv` (Universal Python Package Manager)
+- Docker
 - An Obsidian vault with markdown notes
 
-## Installation
+## Docker Installation and Usage
+
+### Build the Docker Image
+
+```bash
+make build
+```
+
+### Running the API in Docker
+
+#### Default Vault Path
+By default, the Docker container will use the vault path specified in your home directory:
+```bash
+make run
+```
+This mounts `~/Documents/vault` as the default Obsidian vault.
+
+#### Custom Vault Path
+To use a custom Obsidian vault path, set the `OBSIDIAN_VAULT_PATH` environment variable:
+
+```bash
+# macOS/Linux
+OBSIDIAN_VAULT_PATH=/path/to/your/obsidian/vault make run
+
+# Windows PowerShell
+$env:OBSIDIAN_VAULT_PATH="/path/to/your/obsidian/vault"; make run
+```
+
+### Stopping the Docker Container
+
+```bash
+make stop
+```
+
+### Cleaning Up Docker Resources
+
+```bash
+make clean
+```
+
+## Manual Installation (Alternative to Docker)
+
+### Prerequisites for Manual Setup
+
+- Python 3.9+
+- `uv` (Universal Python Package Manager)
+
+### Manual Installation Steps
 
 1. Install `uv` (if not already installed):
 ```bash
@@ -53,20 +99,16 @@ source .venv/bin/activate  # Activate (use .venv\Scripts\activate on Windows)
 uv pip install -r requirements.txt
 ```
 
-## Configuration
-
-Create a `.env` file in the project root with:
+5. Set the vault path:
+```bash
+# Create a .env file
+echo "OBSIDIAN_VAULT_PATH=/path/to/your/obsidian/vault" > .env
 ```
-OBSIDIAN_VAULT_PATH=/path/to/your/obsidian/vault
-```
 
-## Running the Server
-
+6. Run the server:
 ```bash
 python main.py
 ```
-
-The API will be available at `http://localhost:8000`
 
 ## API Endpoints
 
